@@ -2,7 +2,7 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import numpy as np
-import plotly.graph_objs as go
+import plotly.graph_objects as go
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from textblob import TextBlob
@@ -97,18 +97,29 @@ else:
     st.info(f"RSI: {rsi_value:.2f} — ⚖️ Neutral zone.")
 
 # -----------------------------
-# Candlestick Chart
+# ✅ Fixed Candlestick Chart
 # -----------------------------
 st.subheader("🕯️ Candlestick Chart")
-candlestick = go.Figure(data=[go.Candlestick(
+
+fig = go.Figure(data=[go.Candlestick(
     x=data.index,
     open=data['Open'],
     high=data['High'],
     low=data['Low'],
-    close=data['Close']
+    close=data['Close'],
+    increasing_line_color='green',
+    decreasing_line_color='red'
 )])
-candlestick.update_layout(xaxis_rangeslider_visible=False, height=400)
-st.plotly_chart(candlestick, use_container_width=True)
+
+fig.update_layout(
+    title=f"{ticker} Candlestick Chart",
+    xaxis_title="Date",
+    yaxis_title="Price",
+    xaxis_rangeslider_visible=False,
+    height=400
+)
+
+st.plotly_chart(fig, use_container_width=True)
 
 # -----------------------------
 # Actual vs Predicted
