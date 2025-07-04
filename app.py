@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from textblob import TextBlob
 
 # -----------------------------
-# ✅ Manual RSI Function
+# ✅ RSI Calculation
 # -----------------------------
 def compute_RSI(data, time_window=14):
     diff = data['Close'].diff(1)
@@ -21,13 +21,13 @@ def compute_RSI(data, time_window=14):
     return rsi
 
 # -----------------------------
-# ✅ Streamlit Page Config
+# ✅ Streamlit Config
 # -----------------------------
 st.set_page_config(page_title="📈 Stock Intelligence Dashboard", layout="wide")
 st.title("🧠 Smart Stock Intelligence Dashboard")
 
 # -----------------------------
-# Sidebar: Select stock
+# Sidebar
 # -----------------------------
 st.sidebar.header("📌 Choose Your Stock")
 
@@ -46,11 +46,11 @@ ticker = stock_options[selected_name]
 days = st.sidebar.slider("Days of historical data", 60, 365, 180)
 
 # -----------------------------
-# Load stock data
+# ✅ Load Data
 # -----------------------------
 @st.cache_data
 def load_data(ticker, days):
-    data = yf.download(ticker, period=f"{days}d")
+    data = yf.download(ticker, period=f"{days}d", auto_adjust=False)  # 🔧 FIXED
     data['Previous_Close'] = data['Close'].shift(1)
     data['5_day_MA'] = data['Close'].rolling(5).mean()
     data['10_day_MA'] = data['Close'].rolling(10).mean()
@@ -61,7 +61,7 @@ def load_data(ticker, days):
 data = load_data(ticker, days)
 
 # -----------------------------
-# ML Prediction
+# ✅ ML Prediction
 # -----------------------------
 features = ['Previous_Close', '5_day_MA', '10_day_MA', 'Volume']
 X = data[features]
@@ -76,7 +76,7 @@ current_price = float(data['Close'].iloc[-1])
 trend = "UP" if predicted_price > current_price else "DOWN"
 
 # -----------------------------
-# Display Metrics
+# 📊 Metrics Display
 # -----------------------------
 st.subheader("📊 Market Overview")
 col1, col2, col3 = st.columns(3)
@@ -85,7 +85,7 @@ col2.metric("Predicted Price", f"${predicted_price:.2f}", f"${predicted_price - 
 col3.metric("Trend", "📈 UP" if trend == "UP" else "📉 DOWN")
 
 # -----------------------------
-# RSI Signal
+# 📌 RSI Signal
 # -----------------------------
 st.subheader("📌 RSI (Relative Strength Index)")
 rsi_value = data['RSI'].iloc[-1]
@@ -97,9 +97,10 @@ else:
     st.info(f"RSI: {rsi_value:.2f} — ⚖️ Neutral zone.")
 
 # -----------------------------
-# ✅ Fixed Candlestick Chart
+# ✅ Candlestick Chart
 # -----------------------------
 st.subheader("🕯️ Candlestick Chart")
+st.write("🔍 Data Preview", data[['Open', 'High', 'Low', 'Close']].tail())  # 🔍 DEBUG LINE
 
 fig = go.Figure(data=[go.Candlestick(
     x=data.index,
@@ -122,7 +123,7 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True)
 
 # -----------------------------
-# Actual vs Predicted
+# 📈 Actual vs Predicted
 # -----------------------------
 st.subheader("📈 Model Validation: Actual vs Predicted")
 y_pred = model.predict(X_test)
@@ -130,7 +131,7 @@ acc_df = pd.DataFrame({"Actual": y_test, "Predicted": y_pred})
 st.line_chart(acc_df)
 
 # -----------------------------
-# Sentiment Analysis (Demo)
+# 📰 Sentiment Analysis (Demo)
 # -----------------------------
 st.subheader("📰 News Sentiment (Demo Headlines)")
 headlines = [
@@ -145,7 +146,7 @@ for h in headlines:
     st.markdown(f"- {h} — **{sentiment}** (Score: {score:.2f})")
 
 # -----------------------------
-# Save Watchlist Option
+# 📥 Save to Watchlist
 # -----------------------------
 st.sidebar.markdown("---")
 if st.sidebar.button("📥 Save to Watchlist"):
