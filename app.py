@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from textblob import TextBlob
 
 # -----------------------------
-# ✅ RSI Calculation
+# ✅ RSI Function
 # -----------------------------
 def compute_RSI(data, time_window=14):
     diff = data['Close'].diff(1)
@@ -27,7 +27,7 @@ st.set_page_config(page_title="📈 Stock Intelligence Dashboard", layout="wide"
 st.title("🧠 Smart Stock Intelligence Dashboard")
 
 # -----------------------------
-# Sidebar
+# Sidebar Inputs
 # -----------------------------
 st.sidebar.header("📌 Choose Your Stock")
 
@@ -50,7 +50,12 @@ days = st.sidebar.slider("Days of historical data", 60, 365, 180)
 # -----------------------------
 @st.cache_data
 def load_data(ticker, days):
-    data = yf.download(ticker, period=f"{days}d", auto_adjust=False)  # 🔧 FIXED
+    data = yf.download(ticker, period=f"{days}d", auto_adjust=False)
+
+    # ✅ Flatten MultiIndex columns if any
+    if isinstance(data.columns, pd.MultiIndex):
+        data.columns = [col[0] for col in data.columns]
+
     data['Previous_Close'] = data['Close'].shift(1)
     data['5_day_MA'] = data['Close'].rolling(5).mean()
     data['10_day_MA'] = data['Close'].rolling(10).mean()
@@ -100,7 +105,7 @@ else:
 # ✅ Candlestick Chart
 # -----------------------------
 st.subheader("🕯️ Candlestick Chart")
-st.write("🔍 Data Preview", data[['Open', 'High', 'Low', 'Close']].tail())  # 🔍 DEBUG LINE
+st.write("🔍 Data Preview", data[['Open', 'High', 'Low', 'Close']].tail())  # Optional Debug
 
 fig = go.Figure(data=[go.Candlestick(
     x=data.index,
@@ -123,7 +128,7 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True)
 
 # -----------------------------
-# 📈 Actual vs Predicted
+# 📈 Model Validation
 # -----------------------------
 st.subheader("📈 Model Validation: Actual vs Predicted")
 y_pred = model.predict(X_test)
